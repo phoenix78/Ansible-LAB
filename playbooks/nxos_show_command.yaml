@@ -1,0 +1,26 @@
+---
+
+- name: IOS show Commands
+  hosts: Spines,Leafs
+  gather_facts: false
+  connection: local
+
+  vars : 
+    cli:
+      host : "{{ ansible_host }}"
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+
+  tasks:
+    - name: ios show commands
+      ios_command:  
+        commands:
+          - show version
+          - show run
+
+      register: output
+
+    - name: show output in output["end_state"]["contact"]
+      debug:
+        var: output

@@ -1,0 +1,115 @@
+---
+- name: Vxlan VLAN & VNI Provisioning
+  hosts: Leafs
+  gather_facts: no
+
+  vars:
+    nxos_provider:
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+      host: "{{ ansible_host }}"
+
+  tasks:
+
+    - name: CREATE VLANS and MAP TO VNI-SEGMENT
+      nxos_vlan:
+        vlan_id: "{{ item.vlan_id }}"
+        name: "{{ item.name }} "
+        mapped_vni: "{{ item.mapped_vni }}"
+        provider: "{{ nxos_provider }}"
+
+      with_items:
+        - vlan_id: 100
+          name: PROD-VLAN
+          mapped_vni: 10100
+        
+        - vlan_id: 115
+          name: WEB-VLAN
+          mapped_vni: 10115
+
+        - vlan_id: 116
+          name: DB-VLAN
+          mapped_vni: 10116
+
+
+    - name: Add SVI- Distributed gateway for vlan-100
+      nxos_config:
+        lines:
+          - description PROD-VLAN100
+          - no shutdown
+          - vrf member TENANT-1
+          - ip address 10.200.100.1/24
+          - fabric forwarding mode anycast-gateway
+        parents: interface Vlan100
+        provider: "{{ nxos_provider }}"
+
+    - name: Add SVI- Distributed gateway for vlan-115
+      nxos_config:
+        lines:
+          - description WEB-VLAN115
+          - no shutdown
+          - vrf member TENANT-1
+          - ip address 10.200.115.1/24
+          - fabric forwarding mode anycast-gateway
+        parents: interface Vlan115
+        provider: "{{ nxos_provider }}"
+
+    - name: Add SVI - Distributed gateway for vlan-116
+      nxos_config:
+        lines:
+          - description DB-VLAN116
+          - no shutdown
+          - vrf member TENANT-1
+          - ip address 10.200.117.1/24
+          - fabric forwarding mode anycast-gateway
+        parents: interface Vlan116
+        provider: "{{ nxos_provider }}"
+
+
+    - name: Add L2VNI 10100 to Overlay    
+      nxos_vxlan_vtep_vni:
+        interface: nve1
+        vni: 10100
+        multicast_group: 238.0.0.10        
+        supress_arp: true
+        provider: "{{ nxos_provider }}"
+
+    - name: Add L2VNI 10115 to Overlay    
+      nxos_vxlan_vtep_vni:
+        interface: nve1
+        vni: 10115
+        multicast_group: 238.0.0.10
+        supress_arp: true
+        provider: "{{ nxos_provider }}"
+
+    - name: Add L2VNI 10116 to Overlay
+      nxos_vxlan_vtep_vni:
+        interface: nve1
+        vni: 10116
+        multicast_group: 238.0.0.10
+        supress_arp: true
+        provider: "{{ nxos_provider }}"
+
+
+    - name: Add L2VNI 10100 to EVPN
+      nxos_evpn_vni:
+        vni: 10100
+        route_distinguisher: auto
+        route_target_both: auto
+        provider: "{{ nxos_provider }}"
+
+    - name: Add L2VNI 10115 to EVPN
+      nxos_evpn_vni:
+        vni: 10115
+        route_distinguisher: auto
+        route_target_both: auto
+        provider: "{{ nxos_provider }}"
+
+    - name: Add L2VNI 10116 to EVPN 
+      nxos_evpn_vni:
+        vni: 10116
+        route_distinguisher: auto
+        route_target_both: auto 
+        provider: "{{ nxos_provider }}"
+

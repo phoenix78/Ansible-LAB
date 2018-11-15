@@ -1,0 +1,32 @@
+---
+- hosts: Spines,Leafs
+  connection: local
+  gather_facts: no
+  sudo: True
+
+  vars:
+    nxos_provider:
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+      host: "{{ ansible_host }}"
+
+  tasks:
+
+    - name: Create a new user with 15 privilege
+      nxos_user:
+        name: "{{ namevar }}"
+        configured_password: "{{ passvar }}"
+        roles: priv-15
+        state: present
+        provider: "{{ nxos_provider }}"
+
+
+    - name: ____Save running to startup when modified____
+      nxos_config:
+        save_when: modified
+        provider: "{{ nxos_provider }}"
+
+
+
+

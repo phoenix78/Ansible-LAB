@@ -1,0 +1,43 @@
+---
+- name: Check peering bgp and underlay routing on VXLAN FAbric
+  hosts: Spines,Leafs
+  gather_facts: no
+
+  vars:
+    nxos_provider:
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+      host: "{{ ansible_host }}"
+
+  tasks:
+
+    - name: Checking peering BGP 
+      nxos_command:
+        commands:
+          - show bgp l2vpn evpn summ
+        host: "{{ ansible_host }}"
+        provider: "{{ nxos_provider }}"
+      register: result
+
+    - name: print results
+      debug:
+        var: result.stdout_lines
+
+
+    - name: Check the OSPF Routing 
+      nxos_command:
+        commands:
+          - sh ip ospf neighbors
+#        waitfor:
+#          - result[0] contains 'Local'
+        host: "{{ ansible_host }}"
+        provider: "{{ nxos_provider }}"
+      register: result
+
+
+    - name: print results
+      debug:
+        var: result.stdout_lines
+
+

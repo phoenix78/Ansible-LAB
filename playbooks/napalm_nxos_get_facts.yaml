@@ -1,0 +1,22 @@
+---
+- name: Test NAPALM
+  hosts: Leafs
+
+  vars:
+    nxos_provider:
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+      host: "{{ ansible_host }}"
+
+  tasks:
+
+    - name: get facts from device
+      napalm_get_facts:
+        dev_os={{ os }}
+        provider={{ nxos_provider }}
+        filter='facts,interfaces,bgp_neighbors'
+      register: result
+
+    - name: print data
+      debug: var=result

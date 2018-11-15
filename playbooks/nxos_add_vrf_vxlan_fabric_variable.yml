@@ -1,0 +1,82 @@
+---
+- name: Vxlan VLAN & VNI Provisioning
+  hosts: Leafs
+  gather_facts: no
+
+  vars:
+    nxos_provider:
+      username: "{{ un }}"
+      password: "{{ pwd }}"
+      transport: cli
+      host: "{{ ansible_host }}"
+
+  tasks:
+
+    - name: ADD the new vrf on LEafs switches
+      nxos_vrf_af:
+        vrf: "{{ tenant }}"
+        afi: ipv4
+        state: absent
+        provider: "{{ nxos_provider }}"
+
+
+    - name: Configure vrf attributes RD/VNI
+      nxos_config:
+        lines:
+          - vni {{ vni }}
+          - rd auto
+        parents:
+          - vrf context {{ tenant }}
+        provider: "{{ nxos_provider }}"
+
+
+    - name: Configure vrf address-family
+      nxos_config:
+        lines:
+          - route-target both auto
+          - route-target both auto evpn
+        parents:
+          - vrf context {{ tenant }}
+          - address-family ipv4 unicast
+        provider: "{{ nxos_provider }}"
+
+
+    - name: CREATE L3VNI-VLAN and MAP IT TO VNI-SEGMENT
+      nxos_vlan:
+        vlan_id: "{{ item.vlan_id }}"
+        name: "{{ item.name }} "
+        mapped_vni: "{{ item.mapped_vni }}"
+        provider: "{{ nxos_provider }}"
+
+      with_items:
+        - vlan_id: "{{ vlan }}"
+          name: L3VNI-{{ tenant }}
+          mapped_vni: "{{ vni }}"
+    - name: Add SVI L3VNI-VLAN {{ tenant }}
+      nxos_config:
+        lines:
+          - description  L3VNI-VLAN-{{ tenant }}
+          - no shutdown
+          - vrf member {{ tenant }}
+          - ip forward
+        parents: interface Vlan{{ vlan }}
+        provider: "{{ nxos_provider }}"
+
+    - name: add l3vni to interface nve1
+      nxos_config:
+        lines:
+          - member vni {{ vni }} associate-vrf
+        parents:
+          - interface nve1
+        provider: "{{ nxos_provider }}"
+
+    - name: add VRF to bgp configurations
+      nxos_config:
+        lines:
+          - advertise l2vpn evpn
+        parents:
+          - router bgp 65000
+          - vrf {{ tenant }}
+          - address-family ipv4 unicast
+        provider: "{{ nxos_provider }}"
+
