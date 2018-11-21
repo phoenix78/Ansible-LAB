@@ -1,5 +1,5 @@
 ---
-- hosts: Spines,Leafs
+- hosts: all
   connection: local
   gather_facts: no
 
@@ -13,4 +13,4 @@
   tasks:
 
     - name: ____Test Connection to Spines and Leafs____
-      ping: 
+      ping:
