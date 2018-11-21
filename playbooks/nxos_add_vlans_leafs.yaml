@@ -1,6 +1,6 @@
 ---
 - name: Vxlan VLAN & VNI Provisioning
-  hosts: Leafs
+  hosts: all
   gather_facts: no
 
   vars:
@@ -23,7 +23,7 @@
         - vlan_id: 100
           name: PROD-VLAN
           mapped_vni: 10100
-        
+
         - vlan_id: 115
           name: WEB-VLAN
           mapped_vni: 10115
@@ -67,15 +67,15 @@
         provider: "{{ nxos_provider }}"
 
 
-    - name: Add L2VNI 10100 to Overlay    
+    - name: Add L2VNI 10100 to Overlay
       nxos_vxlan_vtep_vni:
         interface: nve1
         vni: 10100
-        multicast_group: 238.0.0.10        
+        multicast_group: 238.0.0.10
         supress_arp: true
         provider: "{{ nxos_provider }}"
 
-    - name: Add L2VNI 10115 to Overlay    
+    - name: Add L2VNI 10115 to Overlay
       nxos_vxlan_vtep_vni:
         interface: nve1
         vni: 10115
@@ -106,10 +106,9 @@
         route_target_both: auto
         provider: "{{ nxos_provider }}"
 
-    - name: Add L2VNI 10116 to EVPN 
+    - name: Add L2VNI 10116 to EVPN
       nxos_evpn_vni:
         vni: 10116
         route_distinguisher: auto
-        route_target_both: auto 
+        route_target_both: auto
         provider: "{{ nxos_provider }}"
-
